@@ -13,33 +13,36 @@ function App() {
 
   const [translations, setTranslations] = useState<{ [key: string]: string } | null>(null)
   const [checkedAllPages, setCheckedAllPages] = useState<boolean>(false)
+  const [totalPdfPages, setTotalPdfPages] = useState<number>()
   const [dataToUseOnPDf, setDataToUseOnPDf] = useState<{[page: string]: string}>()
   const [pdfToEdit, setPdfToEdit] = useState<PDFDocument>()
+  const [showPdfSpinner, setShowPdfSpinner] = useState<boolean>(false)
+  const [showCsvFileError, setShowCsvFileError] = useState<boolean>(false)
+  const [showPdfFileError, setShowPdfFileError] = useState<boolean>(false)
 
   async function pdfInputChange(e: ChangeEvent<HTMLInputElement>) {
     if (!translations) {
-      alert('Najpierw wczytaj tlumaczenia!')
-    }
-
-    if (!e.target.files) {
       return;
     }
+
+    if (!e.target.files || e.target.files[0].type != "application/pdf") {
+      setShowPdfFileError(true);
+      return;
+    }
+
+    setShowPdfFileError(false);
+    setShowPdfSpinner(true)
 
     const file = e.target.files[0]
-    if(file.type != "application/pdf"){
-      console.error(file.name, "To nie jest plik PDF!")
-      return;
-    }
-
     const fileReader = new FileReader();  
     fileReader.onload = async function() {
       const typedarray = new Uint8Array(fileReader.result as any);
 
 
-      // wczytanie pdf i wyszukanie w tekstach z zapisaniem w tablicy info o id i przypisanym numerze strony i przypisanym tekstem do dodania
       getDocument({data: typedarray}).promise
       .then(pdf => {
         const pages = pdf.numPages;
+        setTotalPdfPages(pages)
         const allPromises = []
         for (let i = 1; i <= pages; i++) {
           allPromises.push(pdf.getPage(i))
@@ -76,6 +79,7 @@ function App() {
       // otworzenie pdf do docelowej edycji
       const pdfDoc = await PDFDocument.load(typedarray)
       setPdfToEdit(pdfDoc);
+      setShowPdfSpinner(false)
     }
     
     fileReader.readAsArrayBuffer(file);
@@ -115,11 +119,12 @@ function App() {
 
 
   async function parseCsv(e: ChangeEvent<HTMLInputElement>) {
-    if (!e.target.files) {
-      console.log('csv 2 error')
+    if (!e.target.files || !/\.csv$/i.test(e.target.files[0].name)) {
+      setShowCsvFileError(true)
       return;
     }
 
+    setShowCsvFileError(false)
     const file = e.target.files[0]
     const fileReader = new FileReader();  
     fileReader.onload = async function(result) {
@@ -130,22 +135,64 @@ function App() {
     fileReader.readAsText(file, 'windows-1255')
   }
 
+  function shouldDisableGeneratePdfButton() {
+    return !(checkedAllPages && pdfToEdit !== undefined && dataToUseOnPDf !== undefined && !showPdfFileError && !showCsvFileError)
+  }
+
   return (
     <div className="wrapper">
-      <div>
-        <label htmlFor="translations-csv">Plik CSV z tłumaczeniami:&nbsp;</label>
-        <input type="file" id="translations-csv" onChange={parseCsv}/>
-        {translations && <img src="images/check.jpg" />}
+      <div className="mb-5">
+        <label htmlFor="translations-csv" className="form-label">
+          Plik CSV z tłumaczeniami:
+          {translations && !showCsvFileError && <img src="images/check.jpg" className="check-icon"/>}
+          <span>
+            <button type="button" className="info-button" data-bs-toggle="modal" data-bs-target="#exampleModal">
+              (Jak stworzyć plik CSV?)
+            </button>
+          </span>
+          &nbsp;
+        </label>
+        <input type="file" id="translations-csv" className="form-control" onChange={parseCsv}/>
+        {showCsvFileError && <div className="error-hint">Wczytaj poprawny plik CSV!</div>}
       </div>
-      <br/>
-      <div>
-        <label htmlFor="labels-pdf">Plik PDF z etykietami:&nbsp;</label>
-        <input type="file" id="labels-pdf" onChange={pdfInputChange} disabled={!translations}/>
-        {pdfToEdit && dataToUseOnPDf && <img src="images/check.jpg" />}
+      <div className="mb-5">
+        <label htmlFor="labels-pdf" className="form-label">
+          Plik PDF z etykietami:&nbsp;
+          {showPdfSpinner && <span className="hint">wczytywanie pliku...</span>}
+          {pdfToEdit && dataToUseOnPDf && !showPdfSpinner && !showPdfFileError && <img src="images/check.jpg" className="check-icon"/>}
+          </label>
+        <input type="file" id="labels-pdf" className="form-control" onChange={pdfInputChange} disabled={!translations}/>
+        {showPdfFileError && <div className="error-hint">Wczytaj poprawny plik PDF z etykietami!</div>}
+        {totalPdfPages && !showPdfFileError && <div>Wczytano plik zawierający {totalPdfPages} etykiet (stron).</div>}
+      </div>
+      <div className="wrapper-center">
+        {shouldDisableGeneratePdfButton() && <button type="button" className="btn btn-secondary generate-button" disabled>Generuj PDF z tłumaczeniami</button>}
+        {!shouldDisableGeneratePdfButton() && <button type="button" className="btn btn-success generate-button" onClick={createModyfiedPdf}>Generuj PDF z tłumaczeniami</button>}
+      </div>
 
+      <div className="modal fade" id="exampleModal" tabIndex={-1} aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div className="modal-dialog modal-xl modal-dialog-scrollable">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="exampleModalLabel">Jak zapisać plik CSV?</h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div className="modal-body">
+              <p>Wybierz z menu opcję "Zapisz jako", a następnie wybierz format pliku jako CSV rozdzielony przecinkami:</p>
+              <div className="wrapper-center">
+                <img src="images/how-save-csv.jpg" className="info-image" />
+              </div>
+              <p>Czasami może pojawić się dodatkowe okno z informacją o używanych w pliku makrach, formułach itp. Należy potwierdzić, że chcemy zapisać plik:</p>
+              <div className="wrapper-center">
+                <img src="images/confirm-save-csv.jpg" className="info-image" />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+            </div>
+          </div>
+        </div>
       </div>
-      <br/>
-      <button type="button" onClick={createModyfiedPdf} disabled={!(checkedAllPages && pdfToEdit !== undefined && dataToUseOnPDf !== undefined)}>Generuj PDF z tłumaczeniami</button>
     </div>
   );
 }
