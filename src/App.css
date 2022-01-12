@@ -1,3 +1,69 @@
+body {
+    display: flex;
+    justify-content: center;
+}
+
 .wrapper {
     margin: 16px;
+    margin-top: 32px;
+    width: 700px;
+}
+
+.check-icon {
+    width: 28px;
+    height: 24px;
+    margin-bottom: 4px;
+    margin-left: 4px;
+}
+
+.hint {
+    font-size: 12px;
+    color: gray;
+}
+
+.error-hint {
+    margin-top: 8px;
+    font-size: 12px;
+    color: red;
+}
+
+.action-button {
+    width: 250px;
+    max-width: 250px;
+    margin-bottom: 16px;
+}
+
+.wrapper-center {
+    display: flex;
+    justify-content: center;
+}
+
+.info-image {
+    max-width: 600px;
+}
+
+.info-button {
+    background-color: transparent;
+    color: teal;
+    outline: none;
+    font-size: 12px;
+    border: none;
+}
+
+.info-button:hover {
+    cursor: pointer;
+}
+
+.label-type-image {
+    width: 200px;
+    max-width: 200px;
+}
+
+.label-type-title {
+    margin-left: -16px;
+    margin-bottom: 16px;
+}
+
+.center {
+    text-align: center;
 }
