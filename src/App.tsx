@@ -135,22 +135,22 @@ function App() {
         elements.forEach(el => {
           page.drawRectangle({
             x: el.x - 70,
-            y: el.y + 15,
+            y: el.y + 16,
             width: 275,
             height: 25,
-            borderWidth: 2,
+            borderWidth: 1,
             borderColor: rgb(1,0,0),
             color: rgb(1,1,1)
           })
           page.drawText(el.str || '', {
             x: el.x - 67,
-            y: el.y + 30,
-            size: 8,
+            y: el.y + 31,
+            size: 10,
             font: ubuntuFont,
             color: rgb(0, 0, 0),
             rotate: degrees(0),
             maxWidth: 267,
-            lineHeight: 10,
+            lineHeight: 12,
           })
         })
       })
@@ -264,17 +264,17 @@ function App() {
           </div>
 
           <div className="wrapper-center">
-            {shouldDisableGeneratePdfButton() && <button type="button" className="btn btn-secondary generate-button" disabled>Generuj PDF z tłumaczeniami</button>}
-            {!shouldDisableGeneratePdfButton() && 
-              <div>
-                <div>
-                  <button type="button" className="btn btn-success action-button" onClick={createModyfiedPdf}>Generuj PDF z tłumaczeniami</button>
-                </div>
-                <div>
-                  <button type="button" className="btn btn-light action-button" onClick={() => window.location.reload()}>Zresetuj ustawienia</button>
-                </div>
-              </div>  
-            }
+            {shouldDisableGeneratePdfButton() && <button type="button" className="btn btn-secondary action-button" disabled>Generuj PDF z tłumaczeniami</button>}
+            {!shouldDisableGeneratePdfButton() && <button type="button" className="btn btn-success action-button" onClick={createModyfiedPdf}>Generuj PDF z tłumaczeniami</button>}
+          </div>
+          <div className="wrapper-center">
+            <div className="label-type-title">
+                <span>
+                    <button type="button" className="info-button" onClick={() => window.location.reload()}>
+                      Zresetuj ustawienia
+                    </button>
+                  </span>
+              </div>
           </div>
         </>
       )}

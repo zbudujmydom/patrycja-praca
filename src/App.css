@@ -29,7 +29,8 @@ body {
 
 .action-button {
     width: 250px;
-    margin-bottom: 8px;
+    max-width: 250px;
+    margin-bottom: 16px;
 }
 
 .wrapper-center {
