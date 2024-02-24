@@ -5,7 +5,7 @@ export function getFormatterTranslationsArray(arr: Array<Array<string>>): {
 } {
     const result: { [key: string]: string } = {};
     arr.forEach(([_, id, description]) => {
-        if (Number(id) > 0) {
+        if (id?.length > 0) {
             result[id] = changeToPolishLetters(description);
         }
     });
